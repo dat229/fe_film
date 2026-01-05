@@ -84,6 +84,8 @@ async function request<Response>(
     method,
     headers,
     body: fetchBody,
+    cache: options?.cache,
+    next: options?.cache === "force-cache" ? { revalidate: 30 } : undefined,
   });
 
   const payload = await res.json();

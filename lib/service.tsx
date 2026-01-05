@@ -16,7 +16,7 @@ export async function getHomeFilms(): Promise<HomeFilms> {
 
 export async function searchFilms(params: any): Promise<SearchFilms> {
   const res = await http.get<SearchFilms>(`/films/search?${params.toString()}`, {
-    cache: "no-store",
+    cache: "force-cache",
   });
   
   if (!res.payload) {
