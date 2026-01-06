@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import dynamic from "next/dynamic";
 import { Film, Episode } from "@/types";
 import { Play, ExternalLink } from "lucide-react";
+import { toYoutubeEmbed } from "@/lib/utils";
 
 // const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 
@@ -20,24 +20,27 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
 
   useEffect(() => {
     setHasWindow(true);
-
-    if (isTVSeries && film.episodes && film.episodes.length > 0) {
-      setSelectedEpisode(film.episodes[0]);
-      // Auto detect player type từ episode
-      if (film.episodes[0].linkM3u8) {
+  
+    if (
+      isTVSeries &&
+      film.episodes &&
+      film.episodes.length > 0 &&
+      !selectedEpisode
+    ) {
+      const firstEpisode = film.episodes[0];
+      setSelectedEpisode(firstEpisode);
+  
+      if (firstEpisode.linkM3u8) {
         setPlayerType("m3u8");
-      } else if (film.episodes[0].linkWebview) {
+      } else if (firstEpisode.linkWebview) {
         setPlayerType("webview");
       }
-    } else {
-      // Phim lẻ, dùng link của film
-      if (film.linkM3u8) {
-        setPlayerType("m3u8");
-      } else if (film.linkWebview) {
-        setPlayerType("webview");
-      }
+    } else if (!isTVSeries) {
+      if (film.linkM3u8) setPlayerType("m3u8");
+      else if (film.linkWebview) setPlayerType("webview");
     }
-  }, [film, isTVSeries]);
+  }, [film, isTVSeries, selectedEpisode]);
+  
 
   const handlePlay = () => {
     if (onView) {
@@ -47,7 +50,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
 
   const handleEpisodeSelect = (episode: Episode) => {
     setSelectedEpisode(episode);
-    // Auto detect player type từ episode
     if (episode.linkM3u8) {
       setPlayerType("m3u8");
     } else if (episode.linkWebview) {
@@ -57,7 +59,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
     }
   };
 
-  // Lấy URL để phát dựa trên loại phim
   const getPlayUrl = () => {
     if (isTVSeries && selectedEpisode) {
       if (playerType === "m3u8" && selectedEpisode.linkM3u8) {
@@ -89,7 +90,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
 
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
-      {/* Episode Selector for TV Series */}
 
       <div className="aspect-video bg-black relative">
         {hasWindow && playerType === "m3u8" && playUrl ? (
@@ -129,7 +129,7 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
         ) : playerType === "webview" && playUrl ? (
           <div className="w-full h-full">
             <iframe
-              src={playUrl}
+              src={toYoutubeEmbed(playUrl)}
               className="w-full h-full"
               allow="autoplay; fullscreen"
               onLoad={handlePlay}

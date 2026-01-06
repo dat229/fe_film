@@ -1,17 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useSearchParams } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
 import { Film, SearchFilms } from "@/types";
 import FilmCard from "@/components/FilmCard";
+import FilmCardSkeleton from "@/components/FilmCardSkeleton";
+import SearchableSelect from "@/components/SearchableSelect";
 import { Search, Filter } from "lucide-react";
-import { searchFilms } from "@/lib/service";
+import { getActors, getCategories, getKeywords, searchFilms } from "@/lib/service";
 import useDebounce from "@/components/hooks/useDebounce";
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
-  const [films, setFilms] = useState<Film[]>([]);
-  const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const debouncedSearchTerm = useDebounce(searchQuery, 300);
   const [filters, setFilters] = useState({
@@ -21,6 +22,7 @@ export default function SearchPage() {
     actorId: "",
     keywordId: "",
   });
+  const debouncedYear = useDebounce(filters.year, 500);
   const [countries, setCountries] = useState<any[]>([]);
   const [genres, setGenres] = useState<any[]>([]);
   const [actors, setActors] = useState<any[]>([]);
@@ -33,16 +35,37 @@ export default function SearchPage() {
     fetchKeywords();
   }, []);
 
-  useEffect(() => { 
-    if (debouncedSearchTerm || Object.values(filters).some((v) => v)) {
-      performSearch();
-    }
-  }, [debouncedSearchTerm, filters]);
+  // Tạo query key và params
+  const searchParamsMemo = useMemo(() => {
+    const params = new URLSearchParams();
+    if (debouncedSearchTerm) params.append("q", debouncedSearchTerm);
+    if (debouncedYear) params.append("year", debouncedYear);
+    if (filters.countryId) params.append("countryId", filters.countryId);
+    if (filters.genreId) params.append("genreId", filters.genreId);
+    if (filters.actorId) params.append("actorId", filters.actorId);
+    if (filters.keywordId) params.append("keywordId", filters.keywordId);
+    return params;
+  }, [debouncedSearchTerm, debouncedYear, filters.countryId, filters.genreId, filters.actorId, filters.keywordId]);
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery<SearchFilms>({
+    queryKey: ["search", searchParamsMemo.toString()],
+    queryFn: () => searchFilms(searchParamsMemo),
+    enabled: debouncedSearchTerm !== undefined || Object.values(filters).some((v) => v),
+    placeholderData: (previousData) => previousData,
+    staleTime: 30000,
+  });
+
+  const films = data?.data || [];
+  const loading = isLoading || isFetching;
 
   const fetchCountries = async () => {
     try {
-      const response = await fetch("http://localhost:3001/categories?type=country");
-      const data = await response.json();
+      const data = await getCategories("country");
       setCountries(data);
     } catch (error) {
       console.error("Error fetching countries:", error);
@@ -51,8 +74,7 @@ export default function SearchPage() {
 
   const fetchGenres = async () => {
     try {
-      const response = await fetch("http://localhost:3001/categories?type=genre");
-      const data = await response.json();
+      const data = await getCategories("genre");
       setGenres(data);
     } catch (error) {
       console.error("Error fetching genres:", error);
@@ -61,8 +83,7 @@ export default function SearchPage() {
 
   const fetchActors = async () => {
     try {
-      const response = await fetch("http://localhost:3001/actors");
-      const data = await response.json();
+      const data = await getActors();
       setActors(data);
     } catch (error) {
       console.error("Error fetching actors:", error);
@@ -71,31 +92,10 @@ export default function SearchPage() {
 
   const fetchKeywords = async () => {
     try {
-      const response = await fetch("http://localhost:3001/keywords");
-      const data = await response.json();
+      const data = await getKeywords();
       setKeywords(data);
     } catch (error) {
       console.error("Error fetching keywords:", error);
-    }
-  };
-
-  const performSearch = async () => {
-    setLoading(true);
-    try {
-      const params = new URLSearchParams();
-      if (debouncedSearchTerm) params.append("q", debouncedSearchTerm);
-      if (filters.year) params.append("year", filters.year);
-      if (filters.countryId) params.append("countryId", filters.countryId);
-      if (filters.genreId) params.append("genreId", filters.genreId);
-      if (filters.actorId) params.append("actorId", filters.actorId);
-      if (filters.keywordId) params.append("keywordId", filters.keywordId);
-      console.log(params);
-      const data: SearchFilms = await searchFilms(params);
-      setFilms(data.data || []);
-    } catch (error) {
-      console.error("Error searching films:", error);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -134,90 +134,65 @@ export default function SearchPage() {
               className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500"
             />
           </div>
-          <div>
-            <label className="block text-sm mb-2">Quốc gia</label>
-            <select
-              title="Quốc gia"
-              value={filters.countryId}
-              onChange={(e) =>
-                setFilters({ ...filters, countryId: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500"
-            >
-              <option value="">Tất cả</option>
-              {countries.map((country) => (
-                <option key={country.id} value={country.id}>
-                  {country.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-2">Thể loại</label>
-            <select
-              title="Thể loại"
-              value={filters.genreId}
-              onChange={(e) =>
-                setFilters({ ...filters, genreId: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500"
-            >
-              <option value="">Tất cả</option>
-              {genres.map((genre) => (
-                <option key={genre.id} value={genre.id}>
-                  {genre.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-2">Diễn viên</label>
-            <select
-              title="Diễn viên"
-              value={filters.actorId}
-              onChange={(e) =>
-                setFilters({ ...filters, actorId: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500"
-            >
-              <option value="">Tất cả</option>
-              {actors.map((actor) => (
-                <option key={actor.id} value={actor.id}>
-                  {actor.name}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm mb-2">Từ khóa</label>
-            <select
-              title="Từ khóa"
-              value={filters.keywordId}
-              onChange={(e) =>
-                setFilters({ ...filters, keywordId: e.target.value })
-              }
-              className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500"
-            >
-              <option value="">Tất cả</option>
-              {keywords.map((keyword) => (
-                <option key={keyword.id} value={keyword.id}>
-                  {keyword.name}
-                </option>
-              ))}
-            </select>
-          </div>
+          <SearchableSelect
+            label="Quốc gia"
+            value={filters.countryId}
+            onChange={(value) => setFilters({ ...filters, countryId: value })}
+            options={countries}
+            placeholder="Tất cả quốc gia"
+            searchPlaceholder="Tìm quốc gia..."
+          />
+          <SearchableSelect
+            label="Thể loại"
+            value={filters.genreId}
+            onChange={(value) => setFilters({ ...filters, genreId: value })}
+            options={genres}
+            placeholder="Tất cả thể loại"
+            searchPlaceholder="Tìm thể loại..."
+          />
+          <SearchableSelect
+            label="Diễn viên"
+            value={filters.actorId}
+            onChange={(value) => setFilters({ ...filters, actorId: value })}
+            options={actors}
+            placeholder="Tất cả diễn viên"
+            searchPlaceholder="Tìm diễn viên..."
+          />
+          <SearchableSelect
+            label="Từ khóa"
+            value={filters.keywordId}
+            onChange={(value) => setFilters({ ...filters, keywordId: value })}
+            options={keywords}
+            placeholder="Tất cả từ khóa"
+            searchPlaceholder="Tìm từ khóa..."
+          />
         </div>
       </div>
 
-      {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary-500"></div>
+      {loading && !films.length ? (
+        // Skeleton loading khi chưa có data
+        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+          {Array.from({ length: 12 }).map((_, i) => (
+            <FilmCardSkeleton key={i} />
+          ))}
+        </div>
+      ) : error ? (
+        <div className="text-center py-12 text-red-400">
+          Có lỗi xảy ra khi tìm kiếm. Vui lòng thử lại.
         </div>
       ) : films.length > 0 ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-          {films.map((film) => (
-            <FilmCard key={film.id} film={film} />
-          ))}
+        <div className="relative">
+          {/* Loading overlay khi đang fetch (giữ data cũ) */}
+          {isFetching && films.length > 0 && (
+            <div className="absolute top-0 right-0 bg-primary-500 text-white px-3 py-1 rounded-bl-lg text-sm z-10">
+              Đang tải...
+            </div>
+          )}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {films.map((film: Film) => (
+              <FilmCard key={film.id} film={film} />
+            ))}
+          </div>
         </div>
       ) : (
         <div className="text-center py-12 text-gray-400">

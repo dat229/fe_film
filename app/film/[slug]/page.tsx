@@ -6,6 +6,7 @@ import { Film } from "@/types";
 import FilmPlayer from "@/components/FilmPlayer";
 import FilmCard from "@/components/FilmCard";
 import { Calendar, Clock, Eye, Star, Tag, Play } from "lucide-react";
+import { getCategoryById, getDetailFilmBySlug, getFilms, incrementView } from "@/lib/service";
 
 export default function FilmDetailPage() {
   const params = useParams();
@@ -13,7 +14,7 @@ export default function FilmDetailPage() {
   const [relatedFilms, setRelatedFilms] = useState<Film[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  useEffect(() => { 
     if (params.slug) {
       fetchFilmDetail();
     }
@@ -21,21 +22,15 @@ export default function FilmDetailPage() {
 
   const fetchFilmDetail = async () => {
     try {
-      const response = await fetch(
-        `http://localhost:3001/films/slug/${params.slug}`
-      );
-      const data = await response.json();
+      const data = await getDetailFilmBySlug(params.slug as string);
       setFilm(data);
 
-      // Fetch related films (same category)
       if (data.categories && data.categories.length > 0) {
         const categoryId = data.categories[0].categoryId;
-        const relatedResponse = await fetch(
-          `http://localhost:3001/films?categoryId=${categoryId}&limit=12`
-        );
-        const relatedData = await relatedResponse.json();
+        const relatedData = await getFilms(`categoryId=${categoryId}&limit=12`);
+        
         setRelatedFilms(
-          relatedData.data?.filter((f: Film) => f.id !== data.id) || []
+          relatedData?.data?.filter((f: Film) => f.id !== data.id) || []
         );
       }
     } catch (error) {
@@ -48,9 +43,8 @@ export default function FilmDetailPage() {
   const handleView = async () => {
     if (film) {
       try {
-        await fetch(`http://localhost:3001/films/${film.id}/view`, {
-          method: "POST",
-        });
+        await incrementView(film.id);
+        setFilm({ ...film, viewCount: film.viewCount + 1 });
       } catch (error) {
         console.error("Error incrementing view:", error);
       }

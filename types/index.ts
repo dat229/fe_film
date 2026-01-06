@@ -87,9 +87,20 @@ export interface HomeFilms {
   popular: Film[];
   latest: Film[];
   topRated: Film[];
+  trendingSeries: Film[];
 }
 
 export interface SearchFilms {
+  data: Film[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  };
+}
+
+export interface FilmDataResponse {
   data: Film[];
   pagination: {
     page: number;

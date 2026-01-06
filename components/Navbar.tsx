@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Film, Search, Home } from "lucide-react";
+import { Film, Search, Home, Tv, Clapperboard } from "lucide-react";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -16,7 +16,7 @@ export default function Navbar() {
             <span>WebFilm</span>
           </Link>
 
-          <div className="flex items-center gap-3 md:gap-6">
+          <div className="flex items-center gap-2 md:gap-4 lg:gap-6">
             <Link
               href="/"
               className={`flex items-center gap-1.5 md:gap-2 text-sm md:text-base ${
@@ -27,6 +27,28 @@ export default function Navbar() {
             >
               <Home className="w-4 h-4 md:w-5 md:h-5" />
               <span className="hidden sm:inline">Trang chủ</span>
+            </Link>
+            <Link
+              href="/movies"
+              className={`flex items-center gap-1.5 md:gap-2 text-sm md:text-base ${
+                pathname === "/movies"
+                  ? "text-primary-500"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              <Clapperboard className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Phim Lẻ</span>
+            </Link>
+            <Link
+              href="/tv-series"
+              className={`flex items-center gap-1.5 md:gap-2 text-sm md:text-base ${
+                pathname === "/tv-series"
+                  ? "text-primary-500"
+                  : "text-gray-300 hover:text-white"
+              }`}
+            >
+              <Tv className="w-4 h-4 md:w-5 md:h-5" />
+              <span className="hidden sm:inline">Phim Bộ</span>
             </Link>
             <Link
               href="/search"

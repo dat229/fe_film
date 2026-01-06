@@ -78,10 +78,10 @@ export default function FilmCard({ film }: FilmCardProps) {
                     {film.viewCount.toLocaleString()}
                   </span>
                 )}
-                {film.rating && (
+                {Number(film.rating) > 0 && (
                   <span className="flex items-center gap-1 text-yellow-500">
                     <Star className="w-3 h-3" />
-                    {film.rating.toFixed(1)}
+                    {Number(film.rating).toFixed(1)}
                   </span>
                 )}
               </div>

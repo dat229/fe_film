@@ -1,16 +1,30 @@
 import { Film, HomeFilms } from "@/types";
 import FilmCard from "@/components/FilmCard";
-import { TrendingUp, Clock, Star } from "lucide-react";
+import { TrendingUp, Clock, Star, Tv } from "lucide-react";
 import { getHomeFilms } from "@/lib/service";
 import FeaturedSlider from "@/components/FeaturedSlider";
 
 export default async function Home() {
-  const homeData: HomeFilms = await getHomeFilms();
-
+  const homeData = await getHomeFilms();
   return (
     <div className="container mx-auto">
       {homeData?.featured && homeData.featured.length > 0 && (
         <FeaturedSlider films={homeData.featured} />
+      )}
+      {/* Phim thịnh hành */}
+      {homeData?.trendingSeries && homeData.trendingSeries.length > 0 && (
+        <section className="mb-8 md:mb-12 px-4 md:px-0">
+          <div className="flex items-center gap-2 mb-4 md:mb-6">
+            <Tv className="w-5 h-5 md:w-6 md:h-6 text-primary-500" />
+            <h2 className="text-xl sm:text-2xl md:text-3xl font-bold">Phim Thịnh Hành</h2>
+            <span className="text-sm md:text-base text-gray-500 ml-2">(7 ngày qua)</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {homeData.trendingSeries.map((film: Film) => (
+              <FilmCard key={film.id} film={film} />
+            ))}
+          </div>
+        </section>
       )}
 
       {homeData?.popular && (
@@ -55,6 +69,7 @@ export default async function Home() {
           </div>
         </section>
       )}
+
     </div>
   );
 }

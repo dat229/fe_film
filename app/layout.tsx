@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import Navbar from '@/components/Navbar'
 import Footer from '@/components/Footer'
+import QueryProvider from '@/components/QueryProvider'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -19,11 +20,13 @@ export default function RootLayout({
   return (
     <html lang="vi">
       <body className={inter.className}>
-        <div className="min-h-screen bg-gray-900 text-white">
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-        </div>
+        <QueryProvider>
+          <div className="min-h-screen bg-gray-900 text-white">
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </div>
+        </QueryProvider>
       </body>
     </html>
   )
