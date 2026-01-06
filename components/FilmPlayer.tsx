@@ -118,6 +118,7 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
             className="w-full h-full"
             allow="autoplay; fullscreen"
             allowFullScreen
+            loading="lazy"
             onLoad={handlePlay}
             title={
               isTVSeries && selectedEpisode
@@ -132,6 +133,7 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
               src={toYoutubeEmbed(playUrl)}
               className="w-full h-full"
               allow="autoplay; fullscreen"
+              loading="lazy"
               onLoad={handlePlay}
               title={
                 isTVSeries && selectedEpisode

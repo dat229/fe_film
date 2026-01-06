@@ -96,7 +96,7 @@ export async function getCategoryById(
 
 export async function getFilms(params: any): Promise<FilmDataResponse> {
   const res = await http.get<Film[]>(`/films?${params.toString()}`, {
-    // cache: "force-cache",
+    cache: "force-cache",
   });
 
   if (!res.payload) {
@@ -108,7 +108,7 @@ export async function getFilms(params: any): Promise<FilmDataResponse> {
 
 export async function getDetailFilmBySlug(slug: string): Promise<Film> {
   const res = await http.get<Film>(`/films/slug/${slug}`, {
-    // cache: "force-cache",
+    cache: "force-cache",
   });
 
   if (!res.payload) {
