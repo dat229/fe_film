@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Film, SearchFilms } from "@/types";
@@ -11,7 +11,9 @@ import { Search, Filter } from "lucide-react";
 import { getActors, getCategories, getKeywords, searchFilms } from "@/lib/service";
 import useDebounce from "@/components/hooks/useDebounce";
 
-export default function SearchPage() {
+export const dynamic = 'force-dynamic';
+
+function SearchContent() {
   const searchParams = useSearchParams();
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const debouncedSearchTerm = useDebounce(searchQuery, 300);
@@ -35,7 +37,6 @@ export default function SearchPage() {
     fetchKeywords();
   }, []);
 
-  // Tạo query key và params
   const searchParamsMemo = useMemo(() => {
     const params = new URLSearchParams();
     if (debouncedSearchTerm) params.append("q", debouncedSearchTerm);
@@ -170,7 +171,6 @@ export default function SearchPage() {
       </div>
 
       {loading && !films.length ? (
-        // Skeleton loading khi chưa có data
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
           {Array.from({ length: 12 }).map((_, i) => (
             <FilmCardSkeleton key={i} />
@@ -182,7 +182,6 @@ export default function SearchPage() {
         </div>
       ) : films.length > 0 ? (
         <div className="relative">
-          {/* Loading overlay khi đang fetch (giữ data cũ) */}
           {isFetching && films.length > 0 && (
             <div className="absolute top-0 right-0 bg-primary-500 text-white px-3 py-1 rounded-bl-lg text-sm z-10">
               Đang tải...
@@ -200,5 +199,24 @@ export default function SearchPage() {
         </div>
       )}
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="container mx-auto px-4 py-8">
+          <h1 className="text-3xl font-bold mb-8">Tìm Kiếm Phim</h1>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+            {Array.from({ length: 12 }).map((_, i) => (
+              <FilmCardSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      }
+    >
+      <SearchContent />
+    </Suspense>
   );
 }

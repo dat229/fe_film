@@ -73,9 +73,9 @@ async function request<Response>(
         : JSON.stringify(body);
 
   const baseUrl =
-    (options?.baseUrl ?? envConfig.NEXT_PUBLIC_API_ENDPOINT) ||
+    (options?.baseUrl ?? process.env.NEXT_PUBLIC_API_ENDPOINT) ||
     "http://localhost:3001";
-
+  console.log({baseUrl});
   const fullUrl = url.startsWith("/")
     ? `${baseUrl}${url}`
     : `${baseUrl}/${url}`;

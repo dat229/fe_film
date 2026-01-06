@@ -18,8 +18,8 @@ export default function RootLayout({
   children: React.ReactNode
 }) {
   return (
-    <html lang="vi">
-      <body className={inter.className}>
+    <html lang="vi" suppressHydrationWarning>
+      <body className={inter.className} suppressHydrationWarning>
         <QueryProvider>
           <div className="min-h-screen bg-gray-900 text-white">
             <Navbar />
