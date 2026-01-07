@@ -165,3 +165,84 @@ export async function getKeywords(limit?: number): Promise<Keyword[]> {
 
   return res.payload;
 }
+
+// Watch Progress APIs
+export interface WatchProgress {
+  id: number;
+  deviceId: string;
+  filmId: number;
+  episodeId?: number;
+  currentTime: number;
+  duration: number;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export async function saveWatchProgress(
+  deviceId: string,
+  filmId: number,
+  episodeId: number | undefined,
+  currentTime: number,
+  duration: number,
+  completed?: boolean
+): Promise<WatchProgress | null> {
+  try { 
+    const res = await http.post<WatchProgress>("/watch-progress", {
+      deviceId,
+      filmId,
+      episodeId,
+      currentTime,
+      duration,
+      completed,
+    });
+
+    if (!res.payload) {
+      console.warn("Failed to save watch progress:", res.status, res.mess);
+      return null;
+    }
+
+    return res.payload;
+  } catch (error) {
+    console.error("Error saving watch progress:", error);
+    return null;
+  }
+}
+
+export async function getWatchProgress(
+  deviceId: string,
+  filmId: number,
+  episodeId?: number
+): Promise<WatchProgress | WatchProgress[] | null> {
+  try {
+    const url = episodeId
+      ? `/watch-progress/device/${deviceId}/film/${filmId}/episode/${episodeId}`
+      : `/watch-progress/device/${deviceId}/film/${filmId}`;
+    
+    const res = await http.get<WatchProgress | WatchProgress[]>(url);
+
+    if (!res.payload || res.status === 404) {
+      return null;
+    }
+
+    return res.payload;
+  } catch (error) {
+    console.error("Error getting watch progress:", error);
+    return null;
+  }
+}
+
+export async function getRecentWatching(
+  deviceId: string,
+  limit: number = 20
+): Promise<WatchProgress[]> {
+  const res = await http.get<WatchProgress[]>(
+    `/watch-progress/device/${deviceId}/recent?limit=${limit}`
+  );
+
+  if (!res.payload) {
+    return [];
+  }
+
+  return res.payload;
+}

@@ -75,33 +75,52 @@ async function request<Response>(
   const baseUrl =
     (options?.baseUrl ?? process.env.NEXT_PUBLIC_API_ENDPOINT) ||
     "http://localhost:3001";
-  console.log({baseUrl});
   const fullUrl = url.startsWith("/")
     ? `${baseUrl}${url}`
     : `${baseUrl}/${url}`;
 
-  const res = await fetch(fullUrl, {
-    method,
-    headers,
-    body: fetchBody,
-    cache: options?.cache,
-    next: options?.cache === "force-cache" ? { revalidate: 30 } : undefined,
-  });
+  try {
+    const res = await fetch(fullUrl, {
+      method,
+      headers,
+      body: fetchBody,
+      cache: options?.cache,
+      next: options?.cache === "force-cache" ? { revalidate: 30 } : undefined,
+    });
 
-  const payload = await res.json();
+    // Check if response is JSON
+    const contentType = res.headers.get("content-type");
+    let payload;
+    
+    if (contentType && contentType.includes("application/json")) {
+      payload = await res.json();
+    } else {
+      // If not JSON, return text or null
+      const text = await res.text();
+      payload = text ? JSON.parse(text) : null;
+    }
 
-  if (!res.ok) {
+    if (!res.ok) {
+      console.error(`API Error [${res.status}]:`, fullUrl, payload);
+      return {
+        status: res.status,
+        payload: null,
+        mess: payload?.message || "Lỗi khi fetch dữ liệu",
+      };
+    }
+
     return {
       status: res.status,
+      payload,
+    };
+  } catch (error) {
+    console.error("Fetch Error:", fullUrl, error);
+    return {
+      status: 500,
       payload: null,
-      mess: "Lỗi khi fetch dữ liệu",
+      mess: error instanceof Error ? error.message : "Lỗi khi fetch dữ liệu",
     };
   }
-
-  return {
-    status: res.status,
-    payload,
-  };
 }
 
 const http = {
