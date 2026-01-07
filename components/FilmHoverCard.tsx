@@ -59,7 +59,6 @@ export default function FilmHoverCard({
       ?.filter((fc) => fc.category.type === "genre")
       .map((fc) => fc.category.name) || [];
 
-  // Xác định thời lượng hiển thị
   const durationText =
     film.type === "tv" && film.duration
       ? `${film.duration} phút/tập`

@@ -216,7 +216,9 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
   };
 
   const handleNextEpisode = () => {
-    if (!isTVSeries || !film.episodes || !selectedEpisode) return;
+    if (!isTVSeries || !film.episodes || !selectedEpisode) {
+      return;
+    }
 
     const currentIndex = film.episodes.findIndex(
       (ep) => ep.id === selectedEpisode.id
@@ -325,32 +327,27 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
         setShowNextEpisode(true);
       }
     } catch (error) {
-      console.error("Error saving watch progress:", error);
+      console.error("Lỗi xử lý:", error);
     }
   };
 
-  // reset start time và playing state khi chọn tập/episode mới
+  // "Tập tiếp theo"
   useEffect(() => {
-    if (selectedEpisode || !isTVSeries) {
-      isPlayingRef.current = false;
-      setIsPlaying(false);
-      startTimeRef.current = Date.now();
-      lastActiveTimeRef.current = Date.now();
-    }
-  }, [selectedEpisode, isTVSeries]);
+    if (!isTVSeries || !selectedEpisode || !videoRef.current) return;
 
-  // Hiển thị nút "Tập tiếp theo"
-  useEffect(() => {
-    if (isTVSeries && selectedEpisode) {
-      const timer = setTimeout(() => {
-        if (getNextEpisode()) {
+    const video = videoRef.current;
+    const checkProgress = () => {
+      if (video.duration > 0) {
+        const progress = video.currentTime / video.duration;
+        if (progress >= 0.9 && getNextEpisode()) {
           setShowNextEpisode(true);
         }
-      }, 5 * 60 * 1000); 
+      }
+    };
 
-      return () => clearTimeout(timer);
-    }
-  }, [selectedEpisode, isTVSeries]);
+    video.addEventListener("timeupdate", checkProgress);
+    return () => video.removeEventListener("timeupdate", checkProgress);
+  }, [isTVSeries, selectedEpisode, videoRef.current]);
 
   useEffect(() => {
     if (!isPlayingRef.current) return;
@@ -496,7 +493,7 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
     film.linkWebview,
   ]);
 
-  // Khởi tạo HLS.js cho M3U8 streams và seek đến thời điểm đã lưu
+  // Khởi tạo HLS
   useEffect(() => {
 
     if (!hasWindow || playerType !== "m3u8" || !playUrl) {
@@ -615,13 +612,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
     }
   }, [hasWindow, playerType, playUrl, watchProgress?.currentTime, iframeKey]);
 
-  function withAutoplay(url: string) {
-    if (url.includes("?")) {
-      return url + "&autoplay=1";
-    }
-    return url + "?autoplay=1";
-  }
-
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
       <div className="aspect-video bg-black relative">
@@ -636,21 +626,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
             </button>
           </div>
         )}
-
-        {(() => {
-          const shouldShow =
-            watchProgress &&
-            watchProgress.currentTime > 0 &&
-            !watchProgress.completed;
-          return shouldShow ? (
-            <div className="absolute top-4 left-4 z-10">
-              <div className="bg-black/70 text-white px-3 py-2 rounded-lg text-sm">
-                Tiếp tục xem từ phút{" "}
-                {Math.floor(watchProgress.currentTime / 60)}
-              </div>
-            </div>
-          ) : null;
-        })()}
 
         {hasWindow && playerType === "m3u8" && playUrl ? (
           <video
@@ -669,7 +644,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
                   startTimeRef.current = Date.now();
                   lastActiveTimeRef.current = Date.now();
                 }
-                // Cập nhật initialProgressRef với thời gian thực tế từ video
                 initialProgressRef.current = videoRef.current.currentTime;
               }
             }}
@@ -686,12 +660,9 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
                     : film.duration
                     ? film.duration * 60
                     : 3600);
-
-                // Chỉ update nếu duration > savedProgress.currentTime
                 const shouldUpdate = !watchProgress || duration > watchProgress.currentTime;
                 
                 if (shouldUpdate) {
-                  // Lưu progress với completed = true
                   await saveWatchProgress(
                     deviceId.current,
                     film.id,
@@ -700,8 +671,6 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
                     duration,
                     true
                   );
-
-                  // Cập nhật watchProgress state với completed = true
                   setWatchProgress((prev) => {
                     if (!prev) {
                       return {

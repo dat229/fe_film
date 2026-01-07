@@ -5,7 +5,7 @@ import { Play, Star } from "lucide-react";
 import Link from "next/link";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Pagination, Navigation } from "swiper/modules";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import type { Swiper as SwiperType } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
@@ -18,6 +18,17 @@ interface FeaturedSliderProps {
 export default function FeaturedSlider({ films }: FeaturedSliderProps) {
   const swiperRef = useRef<SwiperType | null>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener("resize", checkScreenSize);
+    return () => window.removeEventListener("resize", checkScreenSize);
+  }, []);
 
   if (!films || films.length === 0) return null;
 
@@ -118,6 +129,7 @@ export default function FeaturedSlider({ films }: FeaturedSliderProps) {
                   }`}
                   alt={film.title}
                   className="w-full h-full object-cover"
+                  loading={isMobile ? "lazy" : undefined}
                 />
                 {isActive && (
                   <div className="absolute inset-0 bg-primary-500/20" />

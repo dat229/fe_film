@@ -13,12 +13,12 @@ interface FilmCardProps {
 export default function FilmCard({ film }: FilmCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const [hoverPosition, setHoverPosition] = useState({ x: 0, y: 0 });
-  const [isLaptop, setIsLaptop] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const checkScreenSize = () => {
-      setIsLaptop(window.innerWidth >= 1024);
+      setIsMobile(window.innerWidth < 768);
     };
 
     checkScreenSize();
@@ -74,7 +74,7 @@ export default function FilmCard({ film }: FilmCardProps) {
               }`}
               alt={film.title}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-              loading={isLaptop ? "eager" : "lazy"}
+              loading={isMobile ? "lazy" : undefined}
             />
           </div>
           <div className="p-3">
@@ -102,7 +102,6 @@ export default function FilmCard({ film }: FilmCardProps) {
         </div>
       </Link>
 
-      {/* Hover Card */}
       <FilmHoverCard
         film={film}
         isVisible={isHovered}
