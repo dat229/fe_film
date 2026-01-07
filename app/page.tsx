@@ -4,6 +4,9 @@ import { TrendingUp, Clock, Star, Tv } from "lucide-react";
 import { getHomeFilms } from "@/lib/service";
 import FeaturedSlider from "@/components/FeaturedSlider";
 
+export const dynamic = "force-dynamic";
+export const revalidate = 60;
+
 export default async function Home() {
   const homeData = await getHomeFilms();
   return (
