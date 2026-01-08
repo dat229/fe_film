@@ -113,7 +113,8 @@ function SearchContent() {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Tìm kiếm phim..."
-            className="w-full pl-10 pr-4 py-3 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-primary-500"
+            className="w-full pl-10 pr-4 py-3 bg-gray-800 rounded-lg border border-gray-700 focus:outline-none focus:border-primary-500 text-base"
+            style={{ fontSize: '16px' }}
           />
         </div>
       </div>
@@ -132,7 +133,8 @@ function SearchContent() {
               value={filters.year}
               onChange={(e) => setFilters({ ...filters, year: e.target.value })}
               placeholder="Năm phát hành"
-              className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500"
+              className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500 text-base"
+              style={{ fontSize: '16px' }}
             />
           </div>
           <SearchableSelect

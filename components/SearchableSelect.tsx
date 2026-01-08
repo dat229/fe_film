@@ -64,7 +64,7 @@ export default function SearchableSelect({
         className="relative cursor-pointer"
         onClick={() => setIsOpen(!isOpen)}
       >
-        <div className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus-within:border-primary-500 flex items-center justify-between">
+        <div className="w-full px-4 py-2 bg-gray-700 rounded border border-gray-600 focus-within:border-primary-500 flex items-center justify-between text-base" style={{ fontSize: '16px' }}>
           <span className={value ? "text-white" : "text-gray-400"}>
             {selectedOption ? selectedOption.name : placeholder}
           </span>
@@ -98,7 +98,8 @@ export default function SearchableSelect({
               onChange={(e) => setSearchTerm(e.target.value)}
               onClick={(e) => e.stopPropagation()}
               placeholder={searchPlaceholder}
-              className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500 text-sm"
+              className="w-full px-3 py-2 bg-gray-700 rounded border border-gray-600 focus:outline-none focus:border-primary-500 text-base"
+              style={{ fontSize: '16px' }}
               autoFocus
             />
           </div>
