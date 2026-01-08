@@ -14,7 +14,6 @@ async function fetchFilmDetail(slug: string) {
   try {
     const film = await getDetailFilmBySlug(slug);
     
-    // Parallel fetch related films
     let relatedFilms: Film[] = [];
     if (film.categories && film.categories.length > 0) {
       const categoryId = film.categories[0].categoryId;
@@ -23,7 +22,7 @@ async function fetchFilmDetail(slug: string) {
         relatedFilms =
           relatedData?.data?.filter((f: Film) => f.id !== film.id) || [];
       } catch (error) {
-        console.error("Error fetching related films:", error);
+        console.error("Error fetching films:", error);
       }
     }
 

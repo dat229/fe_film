@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { Film } from "@/types";
 import FilmPlayer from "./FilmPlayer";
 import { incrementView } from "@/lib/service";
@@ -45,21 +45,20 @@ export default function FilmPlayerWrapper({ film }: FilmPlayerWrapperProps) {
     };
   }, []);
 
-  const handleView = async () => {
+  const handleView = useCallback(async () => {
     if (hasIncrementedView.current) return;
-    
+
     try {
       hasIncrementedView.current = true;
       await incrementView(film.id);
-      setFilmWithUpdatedView({
-        ...filmWithUpdatedView,
-        viewCount: filmWithUpdatedView.viewCount + 1,
-      });
+      setFilmWithUpdatedView((prev) => ({
+        ...prev,
+        viewCount: prev.viewCount + 1,
+      }));
     } catch (error) {
-      console.error("Error incrementing view:", error);
       hasIncrementedView.current = false;
     }
-  };
+  }, [film.id]);
 
   return (
     <div ref={playerRef}>
@@ -76,4 +75,3 @@ export default function FilmPlayerWrapper({ film }: FilmPlayerWrapperProps) {
     </div>
   );
 }
-

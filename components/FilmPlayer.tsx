@@ -139,6 +139,13 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
     loadProgress();
   }, [film, isTVSeries]);
 
+  const handlePlay = () => {
+    isPlayingRef.current = true;
+    setIsPlaying(true);
+    startTimeRef.current = Date.now();
+    lastActiveTimeRef.current = Date.now();
+  };
+
   const handleEpisodeSelect = async (episode: Episode) => {
     // lưu quá trình xử lý của tập trước khi chuyển tập
     if (selectedEpisode && selectedEpisode.id !== episode.id) {
@@ -612,6 +619,12 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
     }
   }, [hasWindow, playerType, playUrl, watchProgress?.currentTime, iframeKey]);
 
+  useEffect(() => {
+    if (onView) {
+      onView();
+    }
+  }, []);
+
   return (
     <div className="bg-gray-800 rounded-lg overflow-hidden">
       <div className="aspect-video bg-black relative">
@@ -634,7 +647,7 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
             className="w-full h-full"
             controls
             playsInline
-            // onPlay={handlePlay}
+            onPlay={handlePlay}
             onTimeUpdate={() => {
               if (videoRef.current) {
                 const playing = !videoRef.current.paused;
@@ -709,11 +722,11 @@ export default function FilmPlayer({ film, onView }: FilmPlayerProps) {
               ref={(el) => {
                 iframeRef.current = el;
               }}
-              src={playUrl}
+              src={toYoutubeEmbed(playUrl)}
               className="w-full h-full"
               allow="autoplay; fullscreen"
               loading="lazy"
-              // onLoad={handlePlay}
+              onLoad={handlePlay}
               title={
                 isTVSeries && selectedEpisode
                   ? selectedEpisode.title ||
